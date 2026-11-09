@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Business Email Compromise | Social Engineering Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a soft, cream-paper reading site; each subtopic page has its own pastel color
+   (grey-green pretexting, pink phishing, baby blue BEC) so readers always know where they are. */
+:root {
+  --bg: #fbf6ec;            /* cream */
+  --surface: #fffdf8;
+  --ink: #2f2b27;
+  --muted: #6f675d;
+  --line: #ece3d3;
+  --accent: #c2414f;        /* red-flag warnings */
+  --flag-bg: #fbe3e6;
+  --tint: #f4ede0;
+  --pre: #4d6658; --pre-soft: #dce6dd;   /* dark grey-green */
+  --phi: #b5567a; --phi-soft: #fadbe5;   /* pastel pink */
+  --bec: #3d77a8; --bec-soft: #d3e7f7;   /* baby blue */
+  --topic-soft: var(--tint);
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.65;
+}
+a { color: inherit; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 1.6rem; font-weight: 700; }
+h3 { font-size: 1.15rem; font-weight: 700; }
+p { margin: 0; }
+ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+
+/* Nav */
+.nav { position: sticky; top: 0; z-index: 10; background: var(--surface); border-bottom: 1px solid var(--line); }
+.nav-inner { max-width: 1080px; margin: 0 auto; padding: 0.7rem 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.4rem; }
+.brand { font-family: var(--font-display); font-weight: 800; text-decoration: none; margin-right: auto; display: flex; align-items: center; gap: 0.5rem; }
+.brand-mark { width: 22px; height: 22px; border-radius: 5px; background: var(--accent); display: inline-grid; place-items: center; color: #fff; font-size: 13px; }
+.nav-links { display: flex; flex-wrap: wrap; gap: 0.2rem 1.1rem; font-size: 0.95rem; }
+.nav-links a { text-decoration: none; color: var(--muted); padding: 0.2rem 0; border-bottom: 2px solid transparent; }
+.nav-links a:hover { color: var(--ink); }
+.nav-links a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* Pages */
+.page { display: none; }
+.page.active { display: block; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.prose { max-width: 68ch; }
+
+.hero { padding: 3.2rem 0 2.4rem; border-bottom: 1px solid var(--line); background: var(--surface); }
+.hero .wrap { display: grid; gap: 1rem; }
+.kicker { font-family: var(--font-mono); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.lede { font-size: 1.15rem; color: var(--muted); max-width: 62ch; }
+.byline { font-size: 0.95rem; color: var(--muted); }
+.byline strong { color: var(--ink); }
+
+.section { padding: 2.6rem 0; display: grid; gap: 1.2rem; }
+.section + .section { border-top: 1px solid var(--line); }
+.section-head { display: grid; gap: 0.35rem; }
+.num { font-family: var(--font-mono); font-size: 0.85rem; color: var(--topic, var(--accent)); font-weight: 500; }
+
+/* topic colors */
+.t-pre { --topic: var(--pre); }
+.t-phi { --topic: var(--phi); }
+.t-bec { --topic: var(--bec); }
+.topic-bar { height: 6px; background: var(--topic); }
+.tag { display: inline-block; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--topic); border: 1px solid var(--topic); border-radius: 999px; padding: 0.1rem 0.6rem; width: fit-content; }
+
+/* Home cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-top: 5px solid var(--topic); border-radius: 10px; padding: 1.3rem; display: grid; gap: 0.7rem; align-content: start; text-decoration: none; }
+.card:hover { border-color: var(--topic); }
+.card .go { font-weight: 600; color: var(--topic); font-size: 0.95rem; }
+.card .who { font-size: 0.88rem; color: var(--muted); }
+
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.3rem; display: grid; gap: 0.7rem; align-content: start; }
+.panel.tinted { background: var(--tint); border-color: transparent; }
+
+.callout { border-left: 4px solid var(--topic, var(--accent)); background: var(--surface); padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; max-width: 72ch; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.2rem; display: grid; gap: 0.3rem; align-content: start; }
+.stat .big { font-family: var(--font-display); font-weight: 800; font-size: 2.2rem; line-height: 1; color: var(--topic, var(--accent)); font-variant-numeric: tabular-nums; }
+.stat .what { font-size: 0.95rem; }
+.stat .src { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+
+.bars { display: grid; gap: 0.6rem; }
+.bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3.2rem; gap: 0.8rem; align-items: center; font-size: 0.92rem; }
+.bar-track { height: 14px; background: var(--tint); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--topic, var(--accent)); border-radius: 4px; }
+.bar-row .val { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+@media (max-width: 480px) { .bar-row { grid-template-columns: 6.5rem 1fr 2.8rem; font-size: 0.85rem; } }
+
+/* Flowchart */
+.flow { display: grid; gap: 0.5rem; }
+.flow-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.85rem; display: grid; gap: 0.3rem; align-content: start; position: relative; }
+.step .n { font-family: var(--font-mono); font-size: 0.75rem; color: var(--topic); }
+.step h3 { font-size: 1rem; }
+.step p { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
+.step:not(:last-child)::after { content: "→"; position: absolute; right: -0.55rem; top: 50%; transform: translate(50%, -50%); color: var(--topic); font-weight: 700; z-index: 1; }
+.branch-label { text-align: center; font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); padding: 0.3rem 0; }
+.branches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.branch { border: 1px dashed var(--topic); border-radius: 8px; padding: 0.8rem; display: grid; gap: 0.25rem; background: var(--surface); }
+.branch h3 { font-size: 0.98rem; }
+.branch p { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
+.outcome { background: var(--topic); color: #fff; border-radius: 8px; padding: 0.8rem 1rem; text-align: center; font-weight: 600; }
+@media (max-width: 820px) {
+  .flow-steps { grid-template-columns: 1fr; }
+  .step:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -0.55rem; transform: translate(50%, 50%); }
+  .branches { grid-template-columns: 1fr; }
+}
+
+/* Technique list */
+.techs { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.8rem; }
+.tech { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; display: grid; gap: 0.35rem; align-content: start; }
+.tech p { font-size: 0.93rem; color: var(--muted); }
+
+/* Example list */
+.examples { display: grid; gap: 0.8rem; }
+.example { display: grid; grid-template-columns: 2.4rem 1fr; gap: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.1rem; }
+.example .ix { font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; color: var(--topic); line-height: 1.2; }
+.example div { display: grid; gap: 0.3rem; }
+
+/* Mock email */
+.email-wrap { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.2rem; align-items: start; }
+@media (max-width: 820px) { .email-wrap { grid-template-columns: 1fr; } }
+.email { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 6px 24px rgba(20, 30, 60, 0.08); }
+.email-label { background: var(--tint); font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); padding: 0.45rem 1rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.email-head { padding: 0.9rem 1rem; border-bottom: 1px solid var(--line); font-family: var(--font-mono); font-size: 0.85rem; display: grid; gap: 0.2rem; overflow-wrap: anywhere; }
+.email-head .k { color: var(--muted); display: inline-block; width: 4.5rem; }
+.email-body { padding: 1rem 1.1rem 1.3rem; display: grid; gap: 0.75rem; font-size: 0.97rem; }
+.flag { background: var(--flag-bg); border-bottom: 2px solid var(--accent); padding: 0 0.15rem; border-radius: 2px; }
+.pin { display: inline-grid; place-items: center; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500; vertical-align: 0.1em; margin-left: 0.15rem; }
+.fake-btn { display: inline-block; background: #2456c7; color: #fff; padding: 0.55rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.92rem; width: fit-content; }
+.flags { list-style: none; padding: 0; display: grid; gap: 0.7rem; }
+.flags li { display: grid; grid-template-columns: 1.5rem 1fr; gap: 0.6rem; align-items: start; }
+.flags .pin { margin: 0.2rem 0 0; }
+
+/* Checklist */
+.checklist { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+.checklist label { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0.6rem; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.75rem 0.9rem; cursor: pointer; }
+.checklist input { width: 1.1rem; height: 1.1rem; margin: 0.3rem 0 0; accent-color: var(--topic); }
+.checklist input:checked + span { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--topic); }
+.progress { font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); }
+
+/* Phish scale */
+.scale { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0.6rem; align-items: stretch; }
+.scale .op { display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; color: var(--topic); }
+@media (max-width: 820px) { .scale { grid-template-columns: 1fr; } .scale .op { padding: 0.2rem; } }
+
+/* Red flags grid */
+.redflags { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.8rem; }
+.rf { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 0.9rem 1rem; display: grid; gap: 0.3rem; align-content: start; }
+.rf p { font-size: 0.92rem; color: var(--muted); }
+
+/* Compare table */
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-display); font-weight: 700; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; color: var(--muted); white-space: nowrap; }
+
+.next { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; padding: 2rem 0 3rem; border-top: 1px solid var(--line); }
+.next a { text-decoration: none; font-weight: 600; color: var(--accent); }
+
+.sources ol { display: grid; gap: 0.8rem; padding-left: 1.3rem; }
+.sources li { padding-left: 0.3rem; }
+.sources .note { font-size: 0.92rem; color: var(--muted); }
+
+footer { border-top: 1px solid var(--line); background: var(--surface); }
+footer .wrap { padding: 1.4rem 20px; font-size: 0.9rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; justify-content: space-between; }
+
+.cite { font-size: 0.7em; vertical-align: super; line-height: 0; margin-left: 0.1em; }
+.cite a { text-decoration: none; color: var(--topic, var(--accent)); font-weight: 600; }
+.refs ol { display: grid; gap: 0.7rem; padding-left: 1.4rem; margin: 0; max-width: 80ch; font-size: 0.95rem; }
+.refs a { color: var(--topic, var(--accent)); overflow-wrap: anywhere; }
+.refs li:target { background: var(--tint); border-radius: 4px; }
+
+/* pastel theme */
+.t-pre { --topic-soft: var(--pre-soft); }
+.t-phi { --topic-soft: var(--phi-soft); }
+.t-bec { --topic-soft: var(--bec-soft); }
+body[class] .hero { background: var(--topic-soft); border-bottom-color: transparent; }
+.tag { background: var(--surface); }
+.panel.tinted { background: var(--topic-soft); }
+.card { background: var(--topic-soft); border-color: transparent; border-top-color: var(--topic); }
+.card:hover { border-color: var(--topic); }
+.nav-links a[aria-current="page"] { border-bottom-color: var(--topic, var(--accent)); }
+.brand-mark { background: var(--ink); }
+.step, .branch, .tech, .example, .stat, .panel, .rf, .email, .table-wrap, .checklist label { border-radius: 12px; }
+.topic-bar { display: none; }
+</style>
+</head>
+<body class="t-bec">
+
+<nav class="nav" aria-label="Main">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">!</span>Social Engineering Explained</a>
+    <div class="nav-links"><a href="index.html">Home</a><a href="pretexting.html">Pretexting</a><a href="phishing.html">Phishing</a><a href="bec.html" aria-current="page">Business Email Compromise</a></div>
+  </div>
+</nav>
+
+<main>
+
+  <div class="topic-bar"></div>
+  <header class="hero">
+    <div class="wrap">
+      <span class="tag">Subtopic 3 · Business Email Compromise</span>
+      <h1>Business Email Compromise (BEC)</h1>
+      <p class="lede">BEC is a type of fraud where attackers impersonate or take over a trusted business email account to trick an employee, vendor, or customer into sending money or sensitive information.<sup class="cite"><a href="#ref-1" aria-label="Source 1">[1]</a></sup></p>
+      <p class="byline">By <strong>Windy Xiong</strong></p>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="section">
+      <div class="grid-2">
+        <div class="panel"><h3>Why it slips past security</h3><p>BEC emails usually have no malicious links or attachments. They're just text asking for something, so traditional security filters often let them through.<sup class="cite"><a href="#ref-4" aria-label="Source 4">[4]</a></sup></p></div>
+        <div class="panel"><h3>What drives it</h3><p>BEC exploits trust that already exists in a known sender or role, like an executive, a vendor, or a finance contact. The attacker makes the request seem routine, legitimate, and time-sensitive so the target acts before verifying. It's basically pretexting over email, and pretexting showed up in 30% of social engineering incidents in Verizon's 2025 report.<sup class="cite"><a href="#ref-4" aria-label="Source 4">[4]</a></sup></p></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="big">$3.05B</span><span class="what">in reported BEC losses in 2025<sup class="cite"><a href="#ref-2" aria-label="Source 2">[2]</a></sup></span><span class="src">FBI IC3 2025 Report</span></div>
+        <div class="stat"><span class="big">~24,800</span><span class="what">BEC complaints filed with the FBI in 2025<sup class="cite"><a href="#ref-3" aria-label="Source 3">[3]</a></sup></span><span class="src">FBI IC3 2025, via McDonald Hopkins</span></div>
+        <div class="stat"><span class="big">#2</span><span class="what">costliest internet crime type in 2025, behind only investment fraud<sup class="cite"><a href="#ref-2" aria-label="Source 2">[2]</a></sup></span><span class="src">FBI IC3 2025 Report</span></div>
+      </div>
+      <div class="panel">
+        <h3>Top reported losses by crime type, 2025 (billions)</h3>
+        <div class="bars">
+          <div class="bar-row"><span>Investment fraud</span><div class="bar-track"><div class="bar-fill" style="width:100%;opacity:0.45"></div></div><span class="val">$8.65</span></div>
+          <div class="bar-row"><span><strong>BEC</strong></span><div class="bar-track"><div class="bar-fill" style="width:35.3%"></div></div><span class="val">$3.05</span></div>
+          <div class="bar-row"><span>Tech support scams</span><div class="bar-track"><div class="bar-fill" style="width:24.6%;opacity:0.45"></div></div><span class="val">$2.13</span></div>
+          <div class="bar-row"><span>Personal data breach</span><div class="bar-track"><div class="bar-fill" style="width:15.2%;opacity:0.45"></div></div><span class="val">$1.32</span></div>
+        </div>
+        <p class="byline" style="font-size:0.85rem">Source: FBI Internet Crime Complaint Center, 2025 Annual Report.<sup class="cite"><a href="#ref-2" aria-label="Source 2">[2]</a></sup></p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="num">Item 1</span>
+        <h2>How does BEC work?</h2>
+      </div>
+      <p class="prose">BEC attackers use pressure to get around a company's normal approval process. Three tactics show up in almost every attempt:</p>
+      <div class="grid-2">
+        <div class="panel"><h3>Authority</h3><p>Posing as the CEO or CFO. Employees don't want to say no to the boss, or slow them down.</p></div>
+        <div class="panel"><h3>Urgency</h3><p>"This must be paid today." A tight deadline leaves no room for the usual checks.</p></div>
+        <div class="panel"><h3>Confidentiality</h3><p>"Keep this between us." Secrecy stops the victim from asking a coworker, who might notice something's off.</p></div>
+      </div>
+      <h3 style="margin-top:0.4rem">Types of BEC</h3>
+      <div class="techs">
+        <div class="tech"><h3>CEO / executive fraud</h3><p>Impersonating a senior leader to request urgent wire transfers or gift card purchases.</p></div>
+        <div class="tech"><h3>Vendor email compromise</h3><p>Also called invoice fraud: spoofing or hijacking a supplier's account to redirect payments.</p></div>
+        <div class="tech"><h3>Account compromise</h3><p>Taking over an employee's real mailbox and sending requests to their contacts and vendors.</p></div>
+        <div class="tech"><h3>Data theft</h3><p>Targeting HR or finance for employee records, W-2 tax forms, or financial data.<sup class="cite"><a href="#ref-1" aria-label="Source 1">[1]</a></sup></p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="num">Example</span>
+        <h2>What a BEC email can look like</h2>
+        <p class="byline">This example is made up. The company, people, and addresses are fictional.</p>
+      </div>
+      <div class="email-wrap">
+        <div class="email">
+          <div class="email-label">Example CEO fraud email</div>
+          <div class="email-head">
+            <div><span class="k">From:</span> Daniel Reyes &lt;<span class="flag">d.reyes@harborline-co.com</span><span class="pin">1</span>&gt;</div>
+            <div><span class="k">To:</span> Jordan Lee &lt;j.lee@harborlineco.com&gt;</div>
+            <div><span class="k">Subject:</span> Quick favor - need this today</div>
+          </div>
+          <div class="email-body">
+            <p>Jordan,</p>
+            <p>I'm stuck in back-to-back meetings at the conference and <span class="flag">can't take calls</span><span class="pin">2</span>. We're finalizing a pending acquisition and I need you to process a wire of <strong>$48,750</strong> to the account below <span class="flag">before 3pm today</span><span class="pin">3</span>.</p>
+            <p>This deal is <span class="flag">confidential until it's announced, so please don't mention it to anyone</span><span class="pin">4</span>, including finance leadership.</p>
+            <p><span class="flag">Use the new banking details attached</span><span class="pin">5</span> and reply once it's sent.</p>
+            <p>Thanks,<br>Daniel<br><span style="color:var(--muted);font-size:0.9rem">Sent from my iPhone</span></p>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Red flags in this email</h3>
+          <ul class="flags">
+            <li><span class="pin">1</span><span><strong>Lookalike domain.</strong> "harborline-co.com" vs. the real "harborlineco.com." One extra hyphen.</span></li>
+            <li><span class="pin">2</span><span><strong>Blocks phone verification.</strong> The attacker makes sure you can't just call to check.</span></li>
+            <li><span class="pin">3</span><span><strong>Urgent deadline.</strong> Pressure to skip the normal approval steps.</span></li>
+            <li><span class="pin">4</span><span><strong>Asks for secrecy.</strong> Cuts you off from coworkers who might catch the scam.</span></li>
+            <li><span class="pin">5</span><span><strong>New payment details.</strong> Any sudden change to where money goes should be verified.</span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="num">Item 2</span>
+        <h2>Examples of BEC</h2>
+      </div>
+      <div class="examples">
+        <div class="example"><span class="ix">A</span><div><h3>The overdue invoice</h3><p>An attacker compromises or spoofs a known vendor's email and sends a message about an "overdue invoice." It includes real details to seem authentic and demands immediate payment to updated bank account details.</p></div></div>
+        <div class="example"><span class="ix">B</span><div><h3>The out-of-office CEO</h3><p>A scammer impersonates the CEO while they're out of the office and emails a finance employee asking for an urgent, confidential wire transfer for a "pending acquisition," while discouraging any phone verification.</p></div></div>
+        <div class="example"><span class="ix">C</span><div><h3>The hijacked mailbox</h3><p>An attacker takes over an employee's real email and slips a fraud request into an ongoing conversation, like changing payroll direct deposit or payment details, at a moment when it seems completely normal.</p></div></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="num">Item 3</span>
+        <h2>How to prevent BEC</h2>
+      </div>
+      <div class="grid-2">
+        <div class="panel tinted"><h3>Strict verification</h3><p>Require secondary confirmation for wire transfers, payment changes, and sensitive data requests, by calling a trusted phone number already on file.<sup class="cite"><a href="#ref-1" aria-label="Source 1">[1]</a></sup></p></div>
+        <div class="panel tinted"><h3>Zero-trust culture and dual approval</h3><p>Encourage employees to question unexpected or out-of-band requests, and require two people to approve high-value payments.</p></div>
+        <div class="panel tinted"><h3>Regular training</h3><p>Run security awareness training that teaches people to notice urgency, secrecy, and emotional pressure.</p></div>
+      </div>
+      <h3 style="margin-top:0.4rem">Warning signs at a glance</h3>
+      <div class="redflags">
+        <div class="rf"><h3>Lookalike addresses</h3><p>One letter or hyphen off from a real company or coworker.</p></div>
+        <div class="rf"><h3>Sudden payment changes</h3><p>"We've switched banks, please use these new details."</p></div>
+        <div class="rf"><h3>Urgency</h3><p>Deadlines that leave no time to check with anyone.</p></div>
+        <div class="rf"><h3>Secrecy</h3><p>Being told not to tell anyone or not to call.</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Conclusion</h2></div>
+      <p class="prose">Business email compromise stands out because it relies on human connection instead of malware or other technical hacks. It's one of the most financially damaging forms of cybercrime. The good news is that the fixes are mostly process, not technology: verifying payment requests through a separate channel, requiring dual approval, and training employees to slow down when an email feels urgent or secretive.</p>
+    </section>
+
+
+    <section class="section refs" id="sources">
+      <div class="section-head"><h2>Sources</h2><p class="byline">Researched by <strong>Windy Xiong</strong></p></div>
+      <ol><li id="ref-1">Federal Bureau of Investigation. <em>Business email compromise.</em> Scams and Safety. <a href="https://www.fbi.gov/scams-and-safety/common-scams-and-crimes/business-e-mail-compromise">www.fbi.gov</a></li><li id="ref-2">Federal Bureau of Investigation, Internet Crime Complaint Center. (2026). <em>2025 IC3 annual report.</em> <a href="https://www.ic3.gov/annualreport/reports">www.ic3.gov</a></li><li id="ref-3">McDonald Hopkins. (2026). <em>The sobering truth of the FBI's 2025 Internet Crime Complaint Center report.</em> <a href="https://www.mcdonaldhopkins.com/insights/news/the-sobering-truth-of-the-fbis-2025-internet-crime-complaint-center-report">www.mcdonaldhopkins.com</a></li><li id="ref-4">Abnormal Security. (2025, April 25). <em>Verizon 2025 DBIR: Key takeaways for modern email security.</em> <a href="https://abnormal.ai/blog/verizon-2025-dbir-key-takeaways">abnormal.ai</a></li></ol>
+    </section>
+    <nav class="next" aria-label="Page navigation"><a href="phishing.html">← Phishing</a><a href="index.html">Back to home →</a></nav>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Sienna Crowley-Wallin · Kiara Villagran-Santos · Windy Xiong</span>
+    <span>Example emails on this site are fictional and for education only.</span>
+  </div>
+</footer>
+
+
+</body>
+</html>

@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pretexting | Social Engineering Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a soft, cream-paper reading site; each subtopic page has its own pastel color
+   (grey-green pretexting, pink phishing, baby blue BEC) so readers always know where they are. */
+:root {
+  --bg: #fbf6ec;            /* cream */
+  --surface: #fffdf8;
+  --ink: #2f2b27;
+  --muted: #6f675d;
+  --line: #ece3d3;
+  --accent: #c2414f;        /* red-flag warnings */
+  --flag-bg: #fbe3e6;
+  --tint: #f4ede0;
+  --pre: #4d6658; --pre-soft: #dce6dd;   /* dark grey-green */
+  --phi: #b5567a; --phi-soft: #fadbe5;   /* pastel pink */
+  --bec: #3d77a8; --bec-soft: #d3e7f7;   /* baby blue */
+  --topic-soft: var(--tint);
+  --font-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.65;
+}
+a { color: inherit; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 1.6rem; font-weight: 700; }
+h3 { font-size: 1.15rem; font-weight: 700; }
+p { margin: 0; }
+ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.4rem; }
+
+/* Nav */
+.nav { position: sticky; top: 0; z-index: 10; background: var(--surface); border-bottom: 1px solid var(--line); }
+.nav-inner { max-width: 1080px; margin: 0 auto; padding: 0.7rem 20px; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.4rem; }
+.brand { font-family: var(--font-display); font-weight: 800; text-decoration: none; margin-right: auto; display: flex; align-items: center; gap: 0.5rem; }
+.brand-mark { width: 22px; height: 22px; border-radius: 5px; background: var(--accent); display: inline-grid; place-items: center; color: #fff; font-size: 13px; }
+.nav-links { display: flex; flex-wrap: wrap; gap: 0.2rem 1.1rem; font-size: 0.95rem; }
+.nav-links a { text-decoration: none; color: var(--muted); padding: 0.2rem 0; border-bottom: 2px solid transparent; }
+.nav-links a:hover { color: var(--ink); }
+.nav-links a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* Pages */
+.page { display: none; }
+.page.active { display: block; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+.prose { max-width: 68ch; }
+
+.hero { padding: 3.2rem 0 2.4rem; border-bottom: 1px solid var(--line); background: var(--surface); }
+.hero .wrap { display: grid; gap: 1rem; }
+.kicker { font-family: var(--font-mono); font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.lede { font-size: 1.15rem; color: var(--muted); max-width: 62ch; }
+.byline { font-size: 0.95rem; color: var(--muted); }
+.byline strong { color: var(--ink); }
+
+.section { padding: 2.6rem 0; display: grid; gap: 1.2rem; }
+.section + .section { border-top: 1px solid var(--line); }
+.section-head { display: grid; gap: 0.35rem; }
+.num { font-family: var(--font-mono); font-size: 0.85rem; color: var(--topic, var(--accent)); font-weight: 500; }
+
+/* topic colors */
+.t-pre { --topic: var(--pre); }
+.t-phi { --topic: var(--phi); }
+.t-bec { --topic: var(--bec); }
+.topic-bar { height: 6px; background: var(--topic); }
+.tag { display: inline-block; font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--topic); border: 1px solid var(--topic); border-radius: 999px; padding: 0.1rem 0.6rem; width: fit-content; }
+
+/* Home cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-top: 5px solid var(--topic); border-radius: 10px; padding: 1.3rem; display: grid; gap: 0.7rem; align-content: start; text-decoration: none; }
+.card:hover { border-color: var(--topic); }
+.card .go { font-weight: 600; color: var(--topic); font-size: 0.95rem; }
+.card .who { font-size: 0.88rem; color: var(--muted); }
+
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.3rem; display: grid; gap: 0.7rem; align-content: start; }
+.panel.tinted { background: var(--tint); border-color: transparent; }
+
+.callout { border-left: 4px solid var(--topic, var(--accent)); background: var(--surface); padding: 1rem 1.2rem; border-radius: 0 8px 8px 0; max-width: 72ch; }
+
+/* Stats */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.2rem; display: grid; gap: 0.3rem; align-content: start; }
+.stat .big { font-family: var(--font-display); font-weight: 800; font-size: 2.2rem; line-height: 1; color: var(--topic, var(--accent)); font-variant-numeric: tabular-nums; }
+.stat .what { font-size: 0.95rem; }
+.stat .src { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+
+.bars { display: grid; gap: 0.6rem; }
+.bar-row { display: grid; grid-template-columns: 9.5rem 1fr 3.2rem; gap: 0.8rem; align-items: center; font-size: 0.92rem; }
+.bar-track { height: 14px; background: var(--tint); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; background: var(--topic, var(--accent)); border-radius: 4px; }
+.bar-row .val { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+@media (max-width: 480px) { .bar-row { grid-template-columns: 6.5rem 1fr 2.8rem; font-size: 0.85rem; } }
+
+/* Flowchart */
+.flow { display: grid; gap: 0.5rem; }
+.flow-steps { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.85rem; display: grid; gap: 0.3rem; align-content: start; position: relative; }
+.step .n { font-family: var(--font-mono); font-size: 0.75rem; color: var(--topic); }
+.step h3 { font-size: 1rem; }
+.step p { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
+.step:not(:last-child)::after { content: "→"; position: absolute; right: -0.55rem; top: 50%; transform: translate(50%, -50%); color: var(--topic); font-weight: 700; z-index: 1; }
+.branch-label { text-align: center; font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); padding: 0.3rem 0; }
+.branches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.branch { border: 1px dashed var(--topic); border-radius: 8px; padding: 0.8rem; display: grid; gap: 0.25rem; background: var(--surface); }
+.branch h3 { font-size: 0.98rem; }
+.branch p { font-size: 0.88rem; color: var(--muted); line-height: 1.5; }
+.outcome { background: var(--topic); color: #fff; border-radius: 8px; padding: 0.8rem 1rem; text-align: center; font-weight: 600; }
+@media (max-width: 820px) {
+  .flow-steps { grid-template-columns: 1fr; }
+  .step:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -0.55rem; transform: translate(50%, 50%); }
+  .branches { grid-template-columns: 1fr; }
+}
+
+/* Technique list */
+.techs { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.8rem; }
+.tech { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 1rem; display: grid; gap: 0.35rem; align-content: start; }
+.tech p { font-size: 0.93rem; color: var(--muted); }
+
+/* Example list */
+.examples { display: grid; gap: 0.8rem; }
+.example { display: grid; grid-template-columns: 2.4rem 1fr; gap: 0.9rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.1rem; }
+.example .ix { font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; color: var(--topic); line-height: 1.2; }
+.example div { display: grid; gap: 0.3rem; }
+
+/* Mock email */
+.email-wrap { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.2rem; align-items: start; }
+@media (max-width: 820px) { .email-wrap { grid-template-columns: 1fr; } }
+.email { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; box-shadow: 0 6px 24px rgba(20, 30, 60, 0.08); }
+.email-label { background: var(--tint); font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); padding: 0.45rem 1rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.email-head { padding: 0.9rem 1rem; border-bottom: 1px solid var(--line); font-family: var(--font-mono); font-size: 0.85rem; display: grid; gap: 0.2rem; overflow-wrap: anywhere; }
+.email-head .k { color: var(--muted); display: inline-block; width: 4.5rem; }
+.email-body { padding: 1rem 1.1rem 1.3rem; display: grid; gap: 0.75rem; font-size: 0.97rem; }
+.flag { background: var(--flag-bg); border-bottom: 2px solid var(--accent); padding: 0 0.15rem; border-radius: 2px; }
+.pin { display: inline-grid; place-items: center; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: var(--accent); color: #fff; font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500; vertical-align: 0.1em; margin-left: 0.15rem; }
+.fake-btn { display: inline-block; background: #2456c7; color: #fff; padding: 0.55rem 1rem; border-radius: 6px; font-weight: 600; font-size: 0.92rem; width: fit-content; }
+.flags { list-style: none; padding: 0; display: grid; gap: 0.7rem; }
+.flags li { display: grid; grid-template-columns: 1.5rem 1fr; gap: 0.6rem; align-items: start; }
+.flags .pin { margin: 0.2rem 0 0; }
+
+/* Checklist */
+.checklist { list-style: none; padding: 0; display: grid; gap: 0.5rem; }
+.checklist label { display: grid; grid-template-columns: 1.4rem 1fr; gap: 0.6rem; align-items: start; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 0.75rem 0.9rem; cursor: pointer; }
+.checklist input { width: 1.1rem; height: 1.1rem; margin: 0.3rem 0 0; accent-color: var(--topic); }
+.checklist input:checked + span { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--topic); }
+.progress { font-family: var(--font-mono); font-size: 0.85rem; color: var(--muted); }
+
+/* Phish scale */
+.scale { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 0.6rem; align-items: stretch; }
+.scale .op { display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 1.5rem; color: var(--topic); }
+@media (max-width: 820px) { .scale { grid-template-columns: 1fr; } .scale .op { padding: 0.2rem; } }
+
+/* Red flags grid */
+.redflags { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 0.8rem; }
+.rf { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 0.9rem 1rem; display: grid; gap: 0.3rem; align-content: start; }
+.rf p { font-size: 0.92rem; color: var(--muted); }
+
+/* Compare table */
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.95rem; }
+th, td { text-align: left; padding: 0.75rem 1rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-display); font-weight: 700; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; color: var(--muted); white-space: nowrap; }
+
+.next { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; padding: 2rem 0 3rem; border-top: 1px solid var(--line); }
+.next a { text-decoration: none; font-weight: 600; color: var(--accent); }
+
+.sources ol { display: grid; gap: 0.8rem; padding-left: 1.3rem; }
+.sources li { padding-left: 0.3rem; }
+.sources .note { font-size: 0.92rem; color: var(--muted); }
+
+footer { border-top: 1px solid var(--line); background: var(--surface); }
+footer .wrap { padding: 1.4rem 20px; font-size: 0.9rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; justify-content: space-between; }
+
+.cite { font-size: 0.7em; vertical-align: super; line-height: 0; margin-left: 0.1em; }
+.cite a { text-decoration: none; color: var(--topic, var(--accent)); font-weight: 600; }
+.refs ol { display: grid; gap: 0.7rem; padding-left: 1.4rem; margin: 0; max-width: 80ch; font-size: 0.95rem; }
+.refs a { color: var(--topic, var(--accent)); overflow-wrap: anywhere; }
+.refs li:target { background: var(--tint); border-radius: 4px; }
+
+/* pastel theme */
+.t-pre { --topic-soft: var(--pre-soft); }
+.t-phi { --topic-soft: var(--phi-soft); }
+.t-bec { --topic-soft: var(--bec-soft); }
+body[class] .hero { background: var(--topic-soft); border-bottom-color: transparent; }
+.tag { background: var(--surface); }
+.panel.tinted { background: var(--topic-soft); }
+.card { background: var(--topic-soft); border-color: transparent; border-top-color: var(--topic); }
+.card:hover { border-color: var(--topic); }
+.nav-links a[aria-current="page"] { border-bottom-color: var(--topic, var(--accent)); }
+.brand-mark { background: var(--ink); }
+.step, .branch, .tech, .example, .stat, .panel, .rf, .email, .table-wrap, .checklist label { border-radius: 12px; }
+.topic-bar { display: none; }
+</style>
+</head>
+<body class="t-pre">
+
+<nav class="nav" aria-label="Main">
+  <div class="nav-inner">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">!</span>Social Engineering Explained</a>
+    <div class="nav-links"><a href="index.html">Home</a><a href="pretexting.html" aria-current="page">Pretexting</a><a href="phishing.html">Phishing</a><a href="bec.html">Business Email Compromise</a></div>
+  </div>
+</nav>
+
+<main>
+
+  <div class="topic-bar"></div>
+  <header class="hero">
+    <div class="wrap">
+      <span class="tag">Subtopic 1 · Pretexting</span>
+      <h1>Pretexting</h1>
+      <p class="lede">Pretexting is a targeted form of social engineering where an attacker invents a scenario (the "pretext") to manipulate a victim into giving up important information or granting access they shouldn't.<sup class="cite"><a href="#ref-1" aria-label="Source 1">[1]</a></sup></p>
+      <p class="byline">By <strong>Sienna Crowley-Wallin</strong></p>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="section">
+      <div class="callout"><strong>The core idea:</strong> a pretexting attack runs on fake trust. The attacker's whole job is convincing you they're who they say they are, and that they have a real and usually urgent reason to need what they're asking for.</div>
+      <p class="prose">The term came from the private investigation industry. In the U.S., using pretexting to get someone's financial records is illegal under the Gramm-Leach-Bliley Act.<sup class="cite"><a href="#ref-1" aria-label="Source 1">[1]</a></sup></p>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="num">How an attack unfolds</span>
+        <h2>The lifecycle of a pretexting attack</h2>
+        <p class="byline prose">One phone call or email is rarely the end goal. The information from a pretext is usually a stepping stone to something bigger: attackers often use details from one person to sound more believable to the next.<sup class="cite"><a href="#ref-2" aria-label="Source 2">[2]</a></sup></p>
+      </div>
+      <div class="flow" role="img" aria-label="Flowchart: reconnaissance, build the pretext, make contact, build trust and apply pressure, the ask. This leads to credential harvesting, secondary baiting, or physical piggybacking, and then broader compromise.">
+        <div class="flow-steps">
+          <div class="step"><span class="n">01</span><h3>Reconnaissance</h3><p>Research the target using LinkedIn, the company site, social media, and org charts.</p></div>
+          <div class="step"><span class="n">02</span><h3>Build the pretext</h3><p>Pick a role (IT tech, vendor, auditor, new hire) and a story that fits what they learned.</p></div>
+          <div class="step"><span class="n">03</span><h3>Make contact</h3><p>Call, email, text, or show up in person, using real names and details to sound legit.</p></div>
+          <div class="step"><span class="n">04</span><h3>Build trust and apply pressure</h3><p>Use authority, urgency, or sympathy so the victim doesn't stop to check.</p></div>
+          <div class="step"><span class="n">05</span><h3>The ask</h3><p>Request a password, a file, a payment, or a door held open.</p></div>
+        </div>
+        <div class="branch-label">↓ what that first win leads to ↓</div>
+        <div class="branches">
+          <div class="branch"><h3>Credential harvesting</h3><p>Stolen logins let the attacker into email, cloud apps, or internal systems.</p></div>
+          <div class="branch"><h3>Secondary baiting</h3><p>Inside knowledge makes the next phishing email or call far more convincing.</p></div>
+          <div class="branch"><h3>Physical piggybacking</h3><p>Walking in behind an employee gets the attacker past badge readers and into secure areas.</p></div>
+        </div>
+        <div class="outcome">Broader compromise: data theft, fraud, or a full network breach</div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="num">By the numbers</span>
+        <h2>Human manipulation is driving breaches</h2>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="big">~60%</span><span class="what">of confirmed breaches involved the human element<sup class="cite"><a href="#ref-3" aria-label="Source 3">[3]</a></sup></span><span class="src">Verizon 2025 DBIR</span></div>
+        <div class="stat"><span class="big">12,195</span><span class="what">confirmed breaches analyzed, the most in any DBIR so far<sup class="cite"><a href="#ref-4" aria-label="Source 4">[4]</a></sup></span><span class="src">Verizon 2025 DBIR</span></div>
+        <div class="stat"><span class="big">#2</span><span class="what">pretexting ranks right behind phishing as the most common social engineering tactic<sup class="cite"><a href="#ref-5" aria-label="Source 5">[5]</a></sup></span><span class="src">Verizon 2025 DBIR</span></div>
+      </div>
+      <div class="panel">
+        <h3>Tactics used in social engineering incidents</h3>
+        <div class="bars">
+          <div class="bar-row"><span>Phishing</span><div class="bar-track"><div class="bar-fill" style="width:57%"></div></div><span class="val">57%</span></div>
+          <div class="bar-row"><span>Pretexting</span><div class="bar-track"><div class="bar-fill" style="width:30%"></div></div><span class="val">30%</span></div>
+        </div>
+        <p class="byline" style="font-size:0.85rem">Share of social engineering incidents using each tactic, Verizon 2025 DBIR, as reported by Abnormal Security.<sup class="cite"><a href="#ref-5" aria-label="Source 5">[5]</a></sup> Pretexting often shows up as business email compromise.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="num">Item 1</span>
+        <h2>How does pretexting work?</h2>
+      </div>
+      <div class="prose" style="display:grid;gap:1rem">
+        <p>Pretexting is mostly psychology. The attacker isn't hacking a system. They're hacking someone's judgment by setting up a situation where saying yes feels like the normal, helpful, or safe thing to do. Three levers come up over and over:</p>
+      </div>
+      <div class="grid-2">
+        <div class="panel"><h3>Authority</h3><p>Posing as a manager, auditor, police officer, or IT admin. People are trained to cooperate with authority and don't want to look difficult by questioning it.</p></div>
+        <div class="panel"><h3>Urgency</h3><p>"The system goes down in an hour." "This invoice is overdue." A deadline cuts out the time people would normally spend double-checking.</p></div>
+        <div class="panel"><h3>Empathy</h3><p>"I'm new and my boss will kill me if I don't get this done." Asking for help makes the victim want to be the one who fixes the problem.</p></div>
+        <div class="panel"><h3>Familiarity</h3><p>Using real names, project details, and internal lingo from their research. If someone knows that much, it feels like they must belong.</p></div>
+      </div>
+      <h3 style="margin-top:0.6rem">Common pretexting techniques</h3>
+      <div class="techs">
+        <div class="tech"><h3>Impersonation</h3><p>Pretending to be a specific coworker, executive, or vendor the victim already knows.</p></div>
+        <div class="tech"><h3>Fake IT or help desk</h3><p>Calling about a "security issue" and asking for a password or remote access to fix it.<sup class="cite"><a href="#ref-2" aria-label="Source 2">[2]</a></sup></p></div>
+        <div class="tech"><h3>Vishing (voice pretexting)</h3><p>Running the pretext over the phone, where tone of voice builds trust and there's no email to inspect.</p></div>
+        <div class="tech"><h3>Physical pretexting</h3><p>Showing up as a delivery driver, contractor, or inspector to get into a building.</p></div>
+        <div class="tech"><h3>Survey or research ruse</h3><p>Posing as a researcher or recruiter and asking "harmless" questions that reveal internal details.</p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="num">Item 2</span>
+        <h2>Examples of pretexting</h2>
+      </div>
+      <div class="examples">
+        <div class="example"><span class="ix">A</span><div><h3>The "overdue invoice"</h3><p>An attacker compromises or spoofs a known vendor's email and sends a message about an overdue invoice. It includes detailed project notes to seem real, and asks for immediate payment to "updated" bank account details. (This is also a business email compromise attack.)</p></div></div>
+        <div class="example"><span class="ix">B</span><div><h3>Fake IT support</h3><p>Someone calls claiming to be from IT or a software vendor and says there's an urgent system issue. To fix it, they need your login credentials, right now.</p></div></div>
+        <div class="example"><span class="ix">C</span><div><h3>The delivery driver or auditor</h3><p>An attacker in a uniform or carrying a clipboard asks to be let in, or just follows an employee through a secure door. Nobody wants to be rude, so nobody asks.</p></div></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <span class="num">Item 3</span>
+        <h2>How to prevent pretexting</h2>
+      </div>
+      <div class="grid-2">
+        <div class="panel tinted"><h3>Strict verification</h3><p>Require a second confirmation for data sharing and wire transfers, like calling back a trusted phone number already on file, never the number in the message.</p></div>
+        <div class="panel tinted"><h3>A "zero-trust" culture</h3><p>Make it normal for employees to question unexpected or out-of-band requests, no matter how senior the person asking seems to be.</p></div>
+        <div class="panel tinted"><h3>Regular training</h3><p>Run security awareness training focused on spotting emotional manipulation and verifying identities before acting.<sup class="cite"><a href="#ref-2" aria-label="Source 2">[2]</a></sup></p></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><h2>Conclusion</h2></div>
+      <p class="prose">Pretexting relies on human psychology instead of technical exploits, and that's exactly why it's one of the most effective ways for attackers to break into organizations. No software update fixes it. The strongest defenses are steady vigilance and verification steps that everyone actually follows, even when the request seems urgent or comes from someone important.</p>
+    </section>
+
+
+    <section class="section refs" id="sources">
+      <div class="section-head"><h2>Sources</h2><p class="byline">Researched by <strong>Sienna Crowley-Wallin</strong></p></div>
+      <ol><li id="ref-1">Federal Trade Commission. <em>FTC cases target pretexting operations under the Gramm-Leach-Bliley Act</em> [Press release]. <a href="https://www.ftc.gov/node/40788">www.ftc.gov</a></li><li id="ref-2">Cybersecurity and Infrastructure Security Agency. (2020). <em>Avoiding social engineering and phishing attacks</em> (Security Tip ST04-014). <a href="https://www.cisa.gov/uscert/ncas/tips/ST04-014">www.cisa.gov</a></li><li id="ref-3">ClearanceJobs. (2025, April 30). <em>60% of breaches still tied to human mistakes: What the 2025 DBIR means for FSOs and leaders.</em> <a href="https://news.clearancejobs.com/2025/04/30/60-of-breaches-still-tied-to-human-mistakes-what-the-2025-dbir-means-for-fsos-and-leaders/">news.clearancejobs.com</a></li><li id="ref-4">Verizon Business. (2025, April 23). <em>Verizon's 2025 Data Breach Investigations Report: Alarming surge in cyberattacks through third-parties.</em> <a href="https://www.verizon.com/about/news/2025-data-breach-investigations-report">www.verizon.com</a></li><li id="ref-5">Abnormal Security. (2025, April 25). <em>Verizon 2025 DBIR: Key takeaways for modern email security.</em> <a href="https://abnormal.ai/blog/verizon-2025-dbir-key-takeaways">abnormal.ai</a></li></ol>
+    </section>
+    <nav class="next" aria-label="Page navigation"><a href="index.html">← Home</a><a href="phishing.html">Next: Phishing →</a></nav>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Sienna Crowley-Wallin · Kiara Villagran-Santos · Windy Xiong</span>
+    <span>Example emails on this site are fictional and for education only.</span>
+  </div>
+</footer>
+
+
+</body>
+</html>
